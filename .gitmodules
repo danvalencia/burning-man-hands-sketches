@@ -1,0 +1,3 @@
+[submodule "BLEShield"]
+	path = BLEShield
+	url = https://github.com/RedBearLab/BLEShield.git

@@ -40,7 +40,14 @@ char pixelIndex = 0;
 // and the +5V wire to a +5V supply
 
 // Set the first variable to the NUMBER of pixels. 25 = 25 pixels in a row
-Adafruit_WS2801 strip = Adafruit_WS2801(20, dataPin, clockPin);
+Adafruit_WS2801 strip_1 = Adafruit_WS2801(9, 30, 31);
+Adafruit_WS2801 strip_2 = Adafruit_WS2801(21, 32, 33);
+Adafruit_WS2801 strip_3 = Adafruit_WS2801(16, 34, 35);
+Adafruit_WS2801 strip_4 = Adafruit_WS2801(23, 36, 37);
+Adafruit_WS2801 strip_5 = Adafruit_WS2801(16, 38, 39);
+Adafruit_WS2801 strip_6 = Adafruit_WS2801(21, 40, 41);
+Adafruit_WS2801 strip_7 = Adafruit_WS2801(9, 42, 43);
+Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
 
 // Optional: leave off pin numbers to use hardware SPI
 // (pinout is then specific to each board and can't be changed)

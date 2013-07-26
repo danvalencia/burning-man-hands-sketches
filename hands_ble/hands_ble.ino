@@ -16,9 +16,9 @@
 
 #define CHANGE_COLOR 0x01
 #define RAINBOW      0x02
+#define UPDATE_PIXEL 0x03
 
-int dataPin  = 2;    // white/green wire
-int clockPin = 3;    // red wire
+#define NUM_STRIPS 7  
 
 byte latestCommand = 0x01;
 
@@ -29,96 +29,108 @@ byte blue = 0x00;
 byte xpos = 0x00;
 byte ypos = 0x00;
 
-
 byte command = 0x00;
 byte delayInMillis = 0x00;
 
-
-
 Adafruit_WS2801 strip;
 
-Adafruit_WS2801 strip_1 = Adafruit_WS2801(9, 30, 31);
-Adafruit_WS2801 strip_2 = Adafruit_WS2801(21, 32, 33);
-Adafruit_WS2801 strip_3 = Adafruit_WS2801(16, 34, 35);
-Adafruit_WS2801 strip_4 = Adafruit_WS2801(23, 36, 37);
-Adafruit_WS2801 strip_5 = Adafruit_WS2801(16, 38, 39);
-Adafruit_WS2801 strip_6 = Adafruit_WS2801(21, 40, 41);
-Adafruit_WS2801 strip_7 = Adafruit_WS2801(9, 42, 43);
-Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
+//Adafruit_WS2801 strip_1 = Adafruit_WS2801(9, 30, 31);
+//Adafruit_WS2801 strip_2 = Adafruit_WS2801(21, 32, 33);
+//Adafruit_WS2801 strip_3 = Adafruit_WS2801(16, 34, 35);
+//Adafruit_WS2801 strip_4 = Adafruit_WS2801(23, 36, 37);
+//Adafruit_WS2801 strip_5 = Adafruit_WS2801(16, 38, 39);
+//Adafruit_WS2801 strip_6 = Adafruit_WS2801(21, 40, 41);
+//Adafruit_WS2801 strip_7 = Adafruit_WS2801(9, 42, 43);
+//Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
 
-Adafruit_WS2801 strip_array[] = {strip_1, strip_2, strip_3, strip_4, strip_5, strip_6, strip_7, strip_8};
+Adafruit_WS2801 strip_2 = Adafruit_WS2801(20, 32, 33);
+Adafruit_WS2801 strip_3 = Adafruit_WS2801(20, 34, 35);
+Adafruit_WS2801 strip_4 = Adafruit_WS2801(20, 36, 37);
+Adafruit_WS2801 strip_5 = Adafruit_WS2801(20, 38, 39);
+Adafruit_WS2801 strip_6 = Adafruit_WS2801(20, 40, 41);
+Adafruit_WS2801 strip_7 = Adafruit_WS2801(20, 42, 43);
+Adafruit_WS2801 strip_8 = Adafruit_WS2801(20, 44, 45);
+
+Adafruit_WS2801 strip_array[] = {/*strip_1,*/ strip_2, strip_3, strip_4, strip_5, strip_6, strip_7, strip_8};
 
 
 void setup()
 {
-  pinMode(PIN, OUTPUT);
+  //pinMode(PIN, OUTPUT);
   
   
   Serial.begin(115200);
-   while (!Serial) {
+  while (!Serial) {
       ; // wait for serial port to connect. Needed for Leonardo only
   }
   
-  for(int x; x<8; x++)
+  for(int i = 0; i < NUM_STRIPS; i++)
   {
-    strip_array[x].begin();
-    strip_array[x].show();
+    strip = strip_array[i];
+    strip.begin();
+    strip.show();
   }
-  //strip.begin();
-
-  // Update LED contents, to start they are all 'off'
-  //strip.show();
   
   setupBluetooth();
 }
 
-//void loop()
-//{
-//  if (ble_available())
-//  {
-//    Serial.println("BLE is Available!");
-//    command = ble_read();
-//    
-//    Serial.println(command, HEX);
-//
-//    switch(command)
-//    {
-//       case(CHANGE_COLOR):
-//         red = ble_read();
-//         green = ble_read();
-//         blue = ble_read();
-//         xpos = ble_read();
-//         ypos = ble_read();
-//         latestCommand = CHANGE_COLOR;
-//         Serial.println(red, HEX);
-//         Serial.println(green, HEX);
-//         Serial.println(blue, HEX);
-//         Serial.println(xpos, HEX);
-//         Serial.println(ypos, HEX);
-//         break;
-//       case(RAINBOW):
-//         delayInMillis = ble_read();
-//         latestCommand = RAINBOW;
-//         break;
-//       default:
-//         break;
-//    }
-//  }
-//  
-//  strip = strip_array[xpos + 1];
-//  doCommand();
-//  
-//  ble_do_events();
-//}
-
 void loop()
 {
-  for(int x; x<8; x++)
+  if (ble_available())
   {
-     strip = strip_array[x];
-     colorWipe(Color(0xFF, 0x00, 0x00), 100);
+    Serial.println("BLE is Available!");
+    command = ble_read();
+    
+    Serial.println(command, HEX);
+
+    switch(command)
+    {
+       case(CHANGE_COLOR):
+         red = ble_read();
+         green = ble_read();
+         blue = ble_read();
+         latestCommand = CHANGE_COLOR;
+         Serial.println(red, HEX);
+         Serial.println(green, HEX);
+         Serial.println(blue, HEX);
+         break;
+       case(RAINBOW):
+         delayInMillis = ble_read();
+         latestCommand = RAINBOW;
+         break;
+       case(UPDATE_PIXEL):
+         red = ble_read();
+         green = ble_read();
+         blue = ble_read();
+         xpos = ble_read();
+         ypos = ble_read();
+         latestCommand = UPDATE_PIXEL;
+         strip = strip_array[xpos - 1];
+         Serial.println(red, HEX);
+         Serial.println(green, HEX);
+         Serial.println(blue, HEX);
+         Serial.println(xpos, HEX);
+         Serial.println(ypos, HEX);
+         break;
+
+       default:
+         break;
+    }
   }
+  
+  doCommand();
+  
+  ble_do_events();
 }
+
+//void loop()
+//{
+//  for(int i; i < NUM_STRIPS; i++)
+//  {
+//     strip = strip_array[i];
+//     colorWipe(Color(255, 0, 0), 50);
+//  }
+//}
 
 void setupBluetooth()
 {
@@ -137,12 +149,17 @@ void doCommand()
    switch(command)
    {
       case(CHANGE_COLOR):
-         //colorWipe(Color(red, green, blue), 0);
-         updateColor(Color(red, green, blue));
+         colorWipe(Color(red, green, blue), 0);
+         //updateColor(Color(red, green, blue));
          break;
       case(RAINBOW):
          rainbow(delayInMillis);
          break;
+      case(UPDATE_PIXEL):
+         Serial.println(xpos, HEX);
+         updateColor(Color(red, green, blue));
+         break;
+ 
       default:
          break;   
    }
@@ -155,15 +172,13 @@ void updateColor(uint32_t color) {
 // fill the dots one after the other with said color
 // good for testing purposes
 void colorWipe(uint32_t c, uint8_t wait) {
-  int i;
-  
+    int i;
+
     for (i=0; i < strip.numPixels(); i++) {
         strip.setPixelColor(i, c);
         strip.show();
         delay(wait);
     }
-  
-  
 }
 
 /* Helper functions */

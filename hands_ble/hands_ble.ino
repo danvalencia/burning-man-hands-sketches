@@ -34,24 +34,24 @@ byte delayInMillis = 0x00;
 
 Adafruit_WS2801 strip;
 
-//Adafruit_WS2801 strip_1 = Adafruit_WS2801(9, 30, 31);
-//Adafruit_WS2801 strip_2 = Adafruit_WS2801(21, 32, 33);
-//Adafruit_WS2801 strip_3 = Adafruit_WS2801(16, 34, 35);
-//Adafruit_WS2801 strip_4 = Adafruit_WS2801(23, 36, 37);
-//Adafruit_WS2801 strip_5 = Adafruit_WS2801(16, 38, 39);
-//Adafruit_WS2801 strip_6 = Adafruit_WS2801(21, 40, 41);
-//Adafruit_WS2801 strip_7 = Adafruit_WS2801(9, 42, 43);
-//Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
+Adafruit_WS2801 strip_1 = Adafruit_WS2801(9, 30, 31);
+Adafruit_WS2801 strip_2 = Adafruit_WS2801(21, 32, 33);
+Adafruit_WS2801 strip_3 = Adafruit_WS2801(16, 34, 35);
+Adafruit_WS2801 strip_4 = Adafruit_WS2801(23, 36, 37);
+Adafruit_WS2801 strip_5 = Adafruit_WS2801(16, 38, 39);
+Adafruit_WS2801 strip_6 = Adafruit_WS2801(21, 40, 41);
+Adafruit_WS2801 strip_7 = Adafruit_WS2801(9, 42, 43);
+Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
 
-Adafruit_WS2801 strip_2 = Adafruit_WS2801(20, 32, 33);
-Adafruit_WS2801 strip_3 = Adafruit_WS2801(20, 34, 35);
-Adafruit_WS2801 strip_4 = Adafruit_WS2801(20, 36, 37);
-Adafruit_WS2801 strip_5 = Adafruit_WS2801(20, 38, 39);
-Adafruit_WS2801 strip_6 = Adafruit_WS2801(20, 40, 41);
-Adafruit_WS2801 strip_7 = Adafruit_WS2801(20, 42, 43);
-Adafruit_WS2801 strip_8 = Adafruit_WS2801(20, 44, 45);
+//Adafruit_WS2801 strip_2 = Adafruit_WS2801(20, 32, 33);
+//Adafruit_WS2801 strip_3 = Adafruit_WS2801(20, 34, 35);
+//Adafruit_WS2801 strip_4 = Adafruit_WS2801(20, 36, 37);
+//Adafruit_WS2801 strip_5 = Adafruit_WS2801(20, 38, 39);
+//Adafruit_WS2801 strip_6 = Adafruit_WS2801(20, 40, 41);
+//Adafruit_WS2801 strip_7 = Adafruit_WS2801(20, 42, 43);
+//Adafruit_WS2801 strip_8 = Adafruit_WS2801(20, 44, 45);
 
-Adafruit_WS2801 strip_array[] = {/*strip_1,*/ strip_2, strip_3, strip_4, strip_5, strip_6, strip_7, strip_8};
+Adafruit_WS2801 strip_array[] = {strip_1, strip_2, strip_3, strip_4, strip_5, strip_6, strip_7, strip_8};
 
 
 void setup()

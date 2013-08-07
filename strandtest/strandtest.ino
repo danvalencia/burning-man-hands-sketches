@@ -27,8 +27,8 @@ Example sketch for driving Adafruit WS2801 pixels!
 // Can be any valid output pins.
 // The colors of the wires may be totally different so
 // BE SURE TO CHECK YOUR PIXELS TO SEE WHICH WIRES TO USE!
-int dataPin  = 2;    // Yellow wire on Adafruit Pixels
-int clockPin = 3;    // Green wire on Adafruit Pixels
+int dataPin  = 42;    // Yellow wire on Adafruit Pixels
+int clockPin = 43;    // Green wire on Adafruit Pixels
 
 int sensorPin = A0;    // select the input pin for the potentiometer
 int sensorValue = 0;  // variable to store the value coming from the sensor
@@ -40,14 +40,19 @@ char pixelIndex = 0;
 // and the +5V wire to a +5V supply
 
 // Set the first variable to the NUMBER of pixels. 25 = 25 pixels in a row
-Adafruit_WS2801 strip_1 = Adafruit_WS2801(9, 30, 31);
-Adafruit_WS2801 strip_2 = Adafruit_WS2801(21, 32, 33);
-Adafruit_WS2801 strip_3 = Adafruit_WS2801(16, 34, 35);
-Adafruit_WS2801 strip_4 = Adafruit_WS2801(23, 36, 37);
-Adafruit_WS2801 strip_5 = Adafruit_WS2801(16, 38, 39);
-Adafruit_WS2801 strip_6 = Adafruit_WS2801(21, 40, 41);
-Adafruit_WS2801 strip_7 = Adafruit_WS2801(9, 42, 43);
-Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
+//Adafruit_WS2801 strip = Adafruit_WS2801(20, dataPin, clockPin);
+Adafruit_WS2801 strip;
+Adafruit_WS2801 strip1 = Adafruit_WS2801(20, 32, 33);
+Adafruit_WS2801 strip2 = Adafruit_WS2801(20, 34, 35);
+Adafruit_WS2801 strip3 = Adafruit_WS2801(20, 36, 37);
+Adafruit_WS2801 strip4 = Adafruit_WS2801(20, 38, 39);
+Adafruit_WS2801 strip5 = Adafruit_WS2801(20, 40, 41);
+Adafruit_WS2801 strip6 = Adafruit_WS2801(20, 42, 43);
+Adafruit_WS2801 strip7 = Adafruit_WS2801(20, 44, 45);
+
+
+Adafruit_WS2801 stripArray[] = {strip1, strip2, strip3, strip4, strip5, strip6, strip7};
+int numberOfStrips = 7;
 
 // Optional: leave off pin numbers to use hardware SPI
 // (pinout is then specific to each board and can't be changed)
@@ -63,21 +68,32 @@ Adafruit_WS2801 strip_8 = Adafruit_WS2801(9, 44, 45);
 //Adafruit_WS2801 strip = Adafruit_WS2801(25, WS2801_GRB);
 
 void setup() {
-  strip.begin();
+  strip1.begin();
 
-  // Update LED contents, to start they are all 'off'
-  strip.show();
+  for(int i = 0; i < numberOfStrips; i++)
+  {
+     strip = stripArray[i];
+     strip.show();
+     strip.begin();
+  }
 }
 
 
 void loop() {
   // Some example procedures showing how to display to the pixels
   //potentiometerLoop(50);
-  colorWipe(Color(255, 0, 0), 50);
-  colorWipe(Color(0, 255, 0), 50);
-  colorWipe(Color(0, 0, 255), 50);
+  for(int i = 0; i < numberOfStrips; i++)
+  {
+     strip = stripArray[i];
+     colorWipe(Color(255, 0, 0), 50);
+
+  }
+//  strip = strip1;
+//  colorWipe(Color(255, 0, 0), 50);
+//  colorWipe(Color(0, 255, 0), 50);
+//  colorWipe(Color(0, 0, 255), 50);
     //rainbow(20);*/s
-  rainbowCycle(20);
+  //rainbowCycle(20);
 }
 
 void potentiometerLoop(uint8_t wait) {

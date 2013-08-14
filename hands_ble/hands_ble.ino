@@ -18,7 +18,7 @@
 #define RAINBOW      0x02
 #define UPDATE_PIXEL 0x03
 
-#define NUM_STRIPS 7  
+#define NUM_STRIPS 8  
 
 byte latestCommand = 0x01;
 
@@ -70,6 +70,8 @@ void setup()
     strip.begin();
     strip.show();
   }
+  
+  initialTest();
   
   setupBluetooth();
 }
@@ -123,14 +125,14 @@ void loop()
   ble_do_events();
 }
 
-//void loop()
-//{
-//  for(int i; i < NUM_STRIPS; i++)
-//  {
-//     strip = strip_array[i];
-//     colorWipe(Color(255, 0, 0), 50);
-//  }
-//}
+void initialTest()
+{
+  for(int i; i < NUM_STRIPS; i++)
+  {
+     strip = strip_array[i];
+     colorWipe(Color(255, 0, 0), 50);
+  }
+}
 
 void setupBluetooth()
 {
@@ -156,7 +158,6 @@ void doCommand()
          rainbow(delayInMillis);
          break;
       case(UPDATE_PIXEL):
-         Serial.println(xpos, HEX);
          updateColor(Color(red, green, blue));
          break;
  

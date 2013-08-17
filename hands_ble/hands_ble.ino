@@ -14,9 +14,10 @@
 #define ON     0x01
 #define OFF    0x00
 
-#define CHANGE_COLOR 0x01
-#define RAINBOW      0x02
+#define VERTICAL_LOOP 0x01
+#define HORIZONTAL_LOOP      0x02
 #define UPDATE_PIXEL 0x03
+#define RAINBOW 0x04
 
 #define NUM_STRIPS 8 
 
@@ -100,7 +101,7 @@ Pixel grid[][11] = {
 Adafruit_WS2801 strip_array[] = {strip_1, strip_2, strip_3, strip_4, strip_5, strip_6, strip_7, strip_8};
 
 int pin = 13;
-volatile byte state = HIGH;
+volatile byte state = LOW;
 
 byte prevState = LOW;
 byte turn = 0;
@@ -200,11 +201,20 @@ void loop()
       
           switch(command)
           {
-             case(CHANGE_COLOR):
+             case(VERTICAL_LOOP):
                red = ble_read();
                green = ble_read();
                blue = ble_read();
-               latestCommand = CHANGE_COLOR;
+               latestCommand = VERTICAL_LOOP;
+               Serial.println(red, HEX);
+               Serial.println(green, HEX);
+               Serial.println(blue, HEX);
+               break;
+             case(HORIZONTAL_LOOP):
+               red = ble_read();
+               green = ble_read();
+               blue = ble_read();
+               latestCommand = HORIZONTAL_LOOP;
                Serial.println(red, HEX);
                Serial.println(green, HEX);
                Serial.println(blue, HEX);
@@ -261,8 +271,18 @@ void doCommand()
 
    switch(command)
    {
-      case(CHANGE_COLOR):
-         colorWipe(Color(red, green, blue), 0);
+      case(VERTICAL_LOOP):
+         verticalLoop(Color(byteIndex++), YES);
+         verticalLoop(Color(0,0,0), YES);
+
+         //colorWipe(Color(red, green, blue), 0);
+         //updateColor(Color(red, green, blue));
+         break;
+      case(HORIZONTAL_LOOP):
+         horizontalLoop(Wheel(byteIndex++), YES);
+         verticalLoop(Color(0,0,0), YES);
+
+         //colorWipe(Color(red, green, blue), 0);
          //updateColor(Color(red, green, blue));
          break;
       case(RAINBOW):

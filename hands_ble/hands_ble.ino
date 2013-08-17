@@ -18,7 +18,20 @@
 #define RAINBOW      0x02
 #define UPDATE_PIXEL 0x03
 
-#define NUM_STRIPS 8  
+#define NUM_STRIPS 8 
+
+#define NUM_COLS 11
+#define NUM_ROWS 23
+
+#define DIVISOR (256/NUM_STRIPS);
+
+#define YES 1
+#define NO 0
+
+#define RIGHT 0
+#define LEFT 1
+#define UP 2
+#define DOWN 3
 
 byte latestCommand = 0x01;
 
@@ -31,6 +44,8 @@ byte ypos = 0x00;
 
 byte command = 0x00;
 byte delayInMillis = 0x00;
+
+byte byteIndex = 0;
 
 Adafruit_WS2801 strip;
 
@@ -48,41 +63,55 @@ typedef struct {
    byte y;
 } Pixel;
 
+typedef struct {
+   byte x;
+   byte y;
+} SnakePosition;
+
 
 Pixel thePix;
 
 Pixel grid[][11] = {
-  {{-1, -1}, {-1, -1}, {1, 0},   {2, 0},   {3, 0},  {4, 0},  {5, 1}, {6, 0},   {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 1},   {2, 1},   {3, 1},  {4, 1},  {5, 2}, {6, 1},   {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 2},   {2, 2},   {3, 2},  {4, 2},  {5, 3}, {6, 2},   {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 3},   {2, 3},   {3, 3},  {4, 3},  {5, 4}, {6, 3},   {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 4},   {2, 4},   {3, 4},  {4, 4},  {5, 5}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 5},   {2, 5},   {3, 5},  {4, 5},  {5, 6}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 6},   {2, 6},   {3, 6},  {4, 6},  {5, 7}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 7},   {2, 7},   {3, 7},  {4, 7},  {5, 8}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 8},   {2, 8},   {3, 8},  {4, 8},  {5, 9}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 9},   {2, 9},   {3, 9},  {4, 9},  {5, 10},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 10},  {2, 10},  {3, 10}, {4, 10}, {5, 11},{6, 4},   {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {0, 0},   {1, 11},  {2, 11},  {3, 11}, {4, 11}, {5, 12},{6, 5},   {7, 0},   {-1, -1}, {-1, -1}},
-  {{-1, -1}, {0, 1},   {1, 12},  {2, 12},  {3, 12}, {4, 12}, {5, 13},{6, 6},   {7, 1},   {7, 3},   {-1, -1}},
-  {{0, 4},   {0, 2},   {1, 13},  {2, 13},  {3, 13}, {4, 13}, {5, 14},{6, 7},   {7, 2},   {7, 4},   {-1, -1}},
-  {{0, 5},   {0, 3},   {1, 14},  {2, 14},  {3, 14}, {4, 14}, {5, 15},{6, 8},   {-1, -1}, {7, 5},   {7, 6}},
-  {{0, 6},   {-1, -1}, {1, 15},  {2, 15},  {3, 15}, {4, 15}, {5, 16},{-1, -1}, {-1, -1}, {-1, -1}, {7, 7}},
-  {{0, 7},   {-1, -1}, {1, 16},  {-1, -1}, {3, 16}, {-1, -1},{5, 17},{-1, -1}, {-1, -1}, {-1, -1}, {7, 8}},
-  {{0, 8},   {-1, -1}, {1, 17},  {-1, -1}, {3, 17}, {-1, -1},{5, 18},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 18},  {-1, -1}, {3, 18}, {-1, -1},{5, 19},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 19},  {-1, -1}, {3, 19}, {-1, -1},{5, 20},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
-  {{-1, -1}, {-1, -1}, {1, 20},  {-1, -1}, {3, 20}, {-1, -1},{5, 21},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {-1, -1},   {2, 0},   {3, 0},  {4, 0},  {5, 0}, {6, 0},   {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 0},   {2, 1},   {3, 1},  {4, 1},  {5, 1}, {6, 1},   {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 1},   {2, 2},   {3, 2},  {4, 2},  {5, 2}, {6, 2},   {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 2},   {2, 3},   {3, 3},  {4, 3},  {5, 3}, {6, 3},   {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 3},   {2, 4},   {3, 4},  {4, 4},  {5, 4}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 4},   {2, 5},   {3, 5},  {4, 5},  {5, 5}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 5},   {2, 6},   {3, 6},  {4, 6},  {5, 6}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 6},   {2, 7},   {3, 7},  {4, 7},  {5, 7}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 7},   {2, 8},   {3, 8},  {4, 8},  {5, 8}, {-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 8},   {2, 9},   {3, 9},  {4, 9},  {5, 9},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 9},  {2, 10},  {3, 10}, {4, 10}, {5, 10},{6, 4},   {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {0, 0},   {1, 10},  {2, 11},  {3, 11}, {4, 11}, {5, 11},{6, 5},   {7, 0},   {-1, -1}, {-1, -1}},
+  {{-1, -1}, {0, 1},   {1, 11},  {2, 12},  {3, 12}, {4, 12}, {5, 12},{6, 6},   {7, 1},   {7, 3},   {-1, -1}},
+  {{0, 4},   {0, 2},   {1, 12},  {2, 13},  {3, 13}, {4, 13}, {5, 13},{6, 7},   {7, 2},   {7, 4},   {-1, -1}},
+  {{0, 5},   {0, 3},   {1, 13},  {2, 14},  {3, 14}, {4, 14}, {5, 14},{6, 8},   {-1, -1}, {7, 5},   {7, 6}},
+  {{0, 6},   {-1, -1}, {1, 14},  {2, 15},  {3, 15}, {4, 15}, {5, 15},{-1, -1}, {-1, -1}, {-1, -1}, {7, 7}},
+  {{0, 7},   {-1, -1}, {1, 15},  {-1, -1}, {3, 16}, {-1, -1},{5, 16},{-1, -1}, {-1, -1}, {-1, -1}, {7, 8}},
+  {{0, 8},   {-1, -1}, {1, 16},  {-1, -1}, {3, 17}, {-1, -1},{5, 17},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 17},  {-1, -1}, {3, 18}, {-1, -1},{5, 18},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 18},  {-1, -1}, {3, 19}, {-1, -1},{5, 19},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
+  {{-1, -1}, {-1, -1}, {1, 19},  {-1, -1}, {3, 20}, {-1, -1},{5, 20},{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}},
   {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {3, 21}, {-1, -1},{-1, -1},{-1, -1},{-1, -1}, {-1, -1}, {-1, -1}},
   {{-1, -1}, {-1, -1}, {-1, -1}, {-1, -1}, {3, 22}, {-1, -1},{-1, -1},{-1, -1},{-1, -1}, {-1, -1}, {-1, -1}},
 };
 
 Adafruit_WS2801 strip_array[] = {strip_1, strip_2, strip_3, strip_4, strip_5, strip_6, strip_7, strip_8};
 
+int pin = 13;
+volatile byte state = HIGH;
+
+byte prevState = LOW;
+byte turn = 0;
+
+SnakePosition snakePosition = {4 , 3};
+byte snakeDirection = UP;
 
 void setup()
 {
-  //pinMode(PIN, OUTPUT);
+  pinMode(pin, OUTPUT);
+  //attachInterrupt(0, switchMode, CHANGE);
     
   Serial.begin(115200);
   while (!Serial) {
@@ -94,91 +123,126 @@ void setup()
     strip = strip_array[i];
     strip.begin();
     strip.show();
-  }
-  
-
-  for(byte i = 0; i < 23; i++)
-  {
-    for(byte j = 0; j < 11; j++)
-    {
-      thePix = (Pixel)grid[i][j];
-      if(thePix.x != 255)
-      {
-        Serial.println(thePix.x);
-        Serial.println(thePix.y);
-
-        strip = strip_array[thePix.x];
-        strip.setPixelColor(thePix.y, Color(0,255,0));
-        strip.show();
-        delay(50);
-        
-        
-      }
-      
-    } 
-  }
-   
-  initialTest();
-  
+  }       
+    
   setupBluetooth();
+  
+  randomSeed(analogRead(0));
+
+  
+
+  horizontalLoop(Wheel(random(255)), YES);
+  clearGrid();
+
+//  rainbow(50);
+//  clearGrid();
+//  
+//  delay(2000);
+//  
+//  clearGrid();
+
 }
 
 void loop()
-{
-  if (ble_available())
-  {
-    Serial.println("BLE is Available!");
-    command = ble_read();
-    
-    Serial.println(command, HEX);
-
-    switch(command)
+{  
+    byteIndex++;
+    if(state)
     {
-       case(CHANGE_COLOR):
-         red = ble_read();
-         green = ble_read();
-         blue = ble_read();
-         latestCommand = CHANGE_COLOR;
-         Serial.println(red, HEX);
-         Serial.println(green, HEX);
-         Serial.println(blue, HEX);
-         break;
-       case(RAINBOW):
-         delayInMillis = ble_read();
-         latestCommand = RAINBOW;
-         break;
-       case(UPDATE_PIXEL):
-         red = ble_read();
-         green = ble_read();
-         blue = ble_read();
-         xpos = ble_read();
-         ypos = ble_read();
-         latestCommand = UPDATE_PIXEL;
-         strip = strip_array[xpos - 1];
-         Serial.println(red, HEX);
-         Serial.println(green, HEX);
-         Serial.println(blue, HEX);
-         Serial.println(xpos, HEX);
-         Serial.println(ypos, HEX);
-         break;
-
-       default:
-         break;
+       switch(turn) {
+           case 0:
+             randomNesss();
+             delay(50);
+             if(byteIndex >= 255) {
+               nextMode(1);
+             }
+             break;
+           case 1:
+             verticalLoop(Wheel(random(255)), YES);
+             verticalLoop(Wheel(random(255)),YES);
+             verticalLoop(Wheel(random(255)), YES);
+             verticalLoop(Wheel(random(255)),YES);
+             clearGrid();
+             nextMode(2);
+             break;
+           case 2:
+             horizontalLoop(Wheel(random(255)), YES);
+             horizontalLoop(Wheel(random(255)), YES);
+             horizontalLoop(Wheel(random(255)), YES);
+             horizontalLoop(Wheel(random(255)), YES);
+             nextMode(3);
+             clearGrid();
+             break;
+           case 3:
+             colorWipe(Wheel(byteIndex++),0);
+             if(byteIndex >= 255) {
+               nextMode(4);
+               clearGrid();
+             }
+             break;
+           default:
+             snake();
+             if(byteIndex >= 255) {
+               nextMode(0);
+             }
+             break;
+//           default:
+//             break;
+       }       
     }
-  }
-  
-  doCommand();
-  
-  ble_do_events();
+    else
+    {
+        if (ble_available())
+        {
+          Serial.println("BLE is Available!");
+          command = ble_read();
+          
+          Serial.println(command, HEX);
+      
+          switch(command)
+          {
+             case(CHANGE_COLOR):
+               red = ble_read();
+               green = ble_read();
+               blue = ble_read();
+               latestCommand = CHANGE_COLOR;
+               Serial.println(red, HEX);
+               Serial.println(green, HEX);
+               Serial.println(blue, HEX);
+               break;
+             case(RAINBOW):
+               delayInMillis = ble_read();
+               latestCommand = RAINBOW;
+               break;
+             case(UPDATE_PIXEL):
+               red = ble_read();
+               green = ble_read();
+               blue = ble_read();
+               xpos = ble_read();
+               ypos = ble_read();
+               latestCommand = UPDATE_PIXEL;
+               strip = strip_array[xpos];
+               Serial.println(red, HEX);
+               Serial.println(green, HEX);
+               Serial.println(blue, HEX);
+               Serial.println(xpos, HEX);
+               Serial.println(ypos, HEX);
+               break;
+      
+             default:
+               break;
+          }
+        }
+              
+        doCommand();
+        
+        ble_do_events();
+    
+    }
 }
 
-void initialTest()
+void switchMode()
 {
-  for(int i; i < NUM_STRIPS; i++)
-  {
-     strip = strip_array[i];
-     colorWipe(Color(255, 0, 0), 50);
-  }
+  state = !state;
 }
 
 void setupBluetooth()
@@ -221,12 +285,38 @@ void updateColor(uint32_t color) {
 // good for testing purposes
 void colorWipe(uint32_t c, uint8_t wait) {
     int i;
-
-    for (i=0; i < strip.numPixels(); i++) {
-        strip.setPixelColor(i, c);
-        strip.show();
-        delay(wait);
+    
+    for (byte k=0; k<NUM_STRIPS; k++)
+    {
+      strip = strip_array[k];
+      for (i=0; i < strip.numPixels(); i++) {
+          strip.setPixelColor(i, c);
+          strip.show();
+          delay(wait);
+      }
     }
+}
+
+void nextMode(byte mode) {
+    delay(300);
+    turn = mode;  
+}
+
+void randomNesss() {
+    long randomX = random(22);
+    long randomY = random(10);
+    long color = Wheel(random(255));
+    setPixelColor(randomX, randomY, color, YES);
+}
+
+void clearGrid() {
+    for(byte i = 0; i<NUM_ROWS; i++)
+    {
+        for(byte j=0; j<NUM_COLS; j++)
+        {
+            setPixelColor(i, j, 0, YES);  
+        }
+    } 
 }
 
 /* Helper functions */
@@ -243,16 +333,51 @@ uint32_t Color(byte r, byte g, byte b)
   return c;
 }
 
-void rainbow(uint8_t wait) {
-  int i, j;
-   
-  for (j=0; j < 256; j++) {     // 3 cycles of all 256 colors in the wheel
-    for (i=0; i < strip.numPixels(); i++) {
-      strip.setPixelColor(i, Wheel( (i + j) % 255));
-    }  
-    strip.show();   // write all the pixels out
+void rainbow(uint8_t wait) {    
+  for (byte j=0; j < 256; j++) {     // 3 cycles of all 256 colors in the wheel
+    verticalLoop(Wheel(j), NO);
+    showStrips();
     delay(wait);
   }
+}
+
+void horizontalLoop(uint32_t color, byte shouldDisplay)
+{
+  for(byte i = 0; i < 23; i++)
+  {
+    for(byte j = 0; j < 11; j++)
+    {
+      setPixelColor(i, j, color, shouldDisplay);
+    } 
+    delay(200);
+  }
+}
+
+void verticalLoop(uint32_t color, byte shouldDisplay)
+{
+  for(byte j = 0; j < 11; j++)
+  {
+    for(byte i = 0; i < 23; i++)
+    {
+      setPixelColor(i,j,color,shouldDisplay);
+    } 
+//    showStrips();
+    delay(200);
+  }
+}
+
+void setPixelColor(byte x, byte y, uint32_t color, byte shouldDisplay)
+{
+   Pixel thePixel = (Pixel)grid[x][y]; 
+
+   if(thePixel.x != 255)
+   {
+        strip = strip_array[thePixel.x];
+        strip.setPixelColor(thePixel.y, color);
+        if(shouldDisplay) {
+          strip.show();        
+        }
+   }
 }
 
 //Input a value 0 to 255 to get a color value.
@@ -269,4 +394,62 @@ uint32_t Wheel(byte WheelPos)
    return Color(0, WheelPos * 3, 255 - WheelPos * 3);
   }
 }
+
+void snake() {
+  drawSnake();
+  determineNextPosition();
+}
+
+void determineNextPosition() {
+  byte finalPos;
+  if(snakeDirection == UP) {
+     finalPos = snakePosition.y + 1;
+  }else{
+     finalPos = snakePosition.y - 1;
+  } 
+
+  Pixel nextPixel = (Pixel)grid[finalPos][snakePosition.x];
+  if(nextPixel.x == 255) {
+    if(snakeDirection == UP)
+    {
+      snakeDirection = DOWN;    
+    }else{
+      snakeDirection = UP;    
+    }
+  }else{
+    if(snakeDirection == UP)
+    {
+      snakePosition.y += 1;
+    }else{
+      snakePosition.y -= 1;
+    }
+  }
+}
+
+void drawSnake() {
+   if(snakeDirection == UP){
+     setPixelColor( snakePosition.y,snakePosition.x, Color(0,255,0), NO);        
+     setPixelColor(snakePosition.y-1,snakePosition.x,  Color(0,255,0), NO);        
+     setPixelColor( snakePosition.y-2,snakePosition.x, Color(0,255,0), NO);        
+     setPixelColor( snakePosition.y-3,snakePosition.x, Color(0,255,0), NO);        
+     setPixelColor(snakePosition.y-4, snakePosition.x, Color(0,0,0), NO); 
+     showStrips();    
+   }else{
+     setPixelColor( snakePosition.y,snakePosition.x, Color(0,255,0), NO);        
+     setPixelColor(snakePosition.y+1,snakePosition.x,  Color(0,255,0), NO);        
+     setPixelColor( snakePosition.y+2,snakePosition.x, Color(0,255,0), NO);        
+     setPixelColor( snakePosition.y+3,snakePosition.x, Color(0,255,0), NO);        
+     setPixelColor(snakePosition.y+4, snakePosition.x, Color(0,0,0), NO); 
+     showStrips();      
+   }
+}  
+  
+
+
+void showStrips() {
+   for(byte i = 0; i < NUM_STRIPS; i++) {
+       strip_array[i].show();
+   }  
+}
+
 

@@ -40,6 +40,9 @@
 #define UP 2
 #define DOWN 3
 
+#define AUTO 0
+#define MANUAL 1
+
 byte latestCommand = 0x00;
 
 byte red = 0x00;
@@ -120,15 +123,21 @@ byte laserDirection = UP;
 SimpleTimer timer;
 
 boolean firstTime = true;
+
 byte shuffleInterval;
 
 byte randomDirection = UP;
 
+byte mode = MANUAL;
+
+byte reading, previousReading;
+
+byte switchPin = 2;
+
 void setup()
 {
-  pinMode(pin, OUTPUT);
-  //attachInterrupt(0, switchMode, CHANGE);
-    
+  pinMode(switchPin, INPUT);
+  
   Serial.begin(115200);
   while (!Serial) {
       ; // wait for serial port to connect. Needed for Leonardo only
@@ -147,28 +156,39 @@ void setup()
   horizontalLoop(Wheel(random(255)), YES);
   clearGrid();
   
-  timerId = timer.setInterval(60000, nextTurn);
+  timerId = timer.setInterval(600000, nextTurn);
 }
 
 void nextTurn() {
     turn = turn + 1;
-    Serial.print("Next Turn: "); 
-    Serial.println(turn);
+    //Serial.print("Next Turn: "); 
+    //Serial.println(turn);
 }
 
 void loop()
 {
+    reading = digitalRead(switchPin);
+
+    if(previousReading != reading) {
+      if(reading == HIGH) {
+         mode = AUTO;  
+         previousReading = HIGH;
+      }else{
+        mode = MANUAL;
+        previousReading = LOW;
+      }
+      //Serial.print("Mode:");
+      //Serial.println(mode);
+      modeChangeSequence();
+    }
+    
     timer.run();  
     byteIndex++;
-    if(state)
+    if(mode == AUTO)
     {
        switch(turn) {
            case 0:
              randomNesss();
-             delay(50);
-             if(byteIndex >= 255) {
-               nextMode(1);
-             }
              break;
            case 1:
              verticalLoop(Wheel(random(255)), YES);
@@ -176,7 +196,6 @@ void loop()
              verticalLoop(Wheel(random(255)), YES);
              verticalLoop(Wheel(random(255)),YES);
              clearGrid();
-             nextMode(2);
              break;
            case 2:
              horizontalLoop(Wheel(random(255)), YES);
@@ -184,20 +203,15 @@ void loop()
              horizontalLoop(Wheel(random(255)), YES);
              horizontalLoop(Wheel(random(255)), YES);
              nextMode(3);
-             clearGrid();
              break;
            case 3:
              colorWipe(Wheel(byteIndex++),0);
              if(byteIndex >= 255) {
-               nextMode(4);
                clearGrid();
              }
              break;
            default:
-             laser();
-             if(byteIndex >= 255) {
-               nextMode(0);
-             }
+             turn = 0;
              break;
        }       
     }
@@ -205,9 +219,9 @@ void loop()
     {
         if (ble_available())
         {
-          Serial.println("BLE!");
+          //Serial.println("BLE!");
           command = ble_read();
-          Serial.println(command, HEX);
+          //Serial.println(command, HEX);
       
           switch(command)
           {
@@ -216,8 +230,8 @@ void loop()
                green = ble_read();
                blue = ble_read();
                latestCommand = VERTICAL_LOOP;
-               Serial.println(red, HEX);
-               Serial.println(green, HEX);
+               //Serial.println(red, HEX);
+               ntln(green, HEX);
                Serial.println(blue, HEX);
                break;
              case(HORIZONTAL_LOOP):
@@ -239,9 +253,6 @@ void loop()
                latestCommand = RANDOMNESS;
                break;
              case(SHUFFLE):
-               shuffleInterval = ble_read();
-               Serial.print("Interval:");
-               Serial.println(shuffleInterval);
                break;
              case(RAINBOW):
                delayInMillis = ble_read();
@@ -276,7 +287,32 @@ void loop()
 
 void switchMode()
 {
-  state = !state;
+  if(state == LOW) {
+    state = HIGH;  
+  } else {
+    state = LOW; 
+  }
+  
+  Serial.println("switching");
+}
+
+void modeChangeSequence() {
+      colorWipe(Color(255,255,255),0);
+      delay(100);
+      colorWipe(Color(0,0,0),0);
+      delay(100);
+      colorWipe(Color(255,255,255),0);
+      delay(100);
+      colorWipe(Color(0,0,0),0);
+      delay(100);
+      colorWipe(Color(255,255,255),0);
+      delay(100);
+      colorWipe(Color(0,0,0),0);
+      delay(100);
+      colorWipe(Color(255,255,255),0);
+      delay(100);
+      colorWipe(Color(0,0,0),0);
+      delay(100);  
 }
 
 void setupBluetooth()
@@ -346,9 +382,9 @@ void shuffle() {
        case 3:
          verticalLoop(Wheel(random(255)), YES);
          break;
-//       case 4:
-//         //laser();
-//         break;
+       case 4:
+         laser();
+         break;
        default:
          turn = 0; //start over
          break;
@@ -489,7 +525,7 @@ void determineNextPosition() {
   } 
 
   Pixel nextPixel = (Pixel)grid[finalPos][laserPosition.x];
-  if(nextPixel.x == 255) {
+  if(nextPixel.x == -1) {
     if(laserDirection == UP)
     {
       laserDirection = DOWN;    

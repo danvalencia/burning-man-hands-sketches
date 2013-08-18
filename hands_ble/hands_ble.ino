@@ -18,6 +18,10 @@
 #define HORIZONTAL_LOOP      0x02
 #define UPDATE_PIXEL 0x03
 #define RAINBOW 0x04
+#define LASER 0x05
+#define COLOR_FADE 0x06
+#define RANDOMNESS 0x07
+#define SHUFFLE 0x08
 
 #define NUM_STRIPS 8 
 
@@ -34,7 +38,7 @@
 #define UP 2
 #define DOWN 3
 
-byte latestCommand = 0x01;
+byte latestCommand = 0x00;
 
 byte red = 0x00;
 byte green = 0x00;
@@ -67,7 +71,7 @@ typedef struct {
 typedef struct {
    byte x;
    byte y;
-} SnakePosition;
+} Position;
 
 
 Pixel thePix;
@@ -106,8 +110,8 @@ volatile byte state = LOW;
 byte prevState = LOW;
 byte turn = 0;
 
-SnakePosition snakePosition = {4 , 3};
-byte snakeDirection = UP;
+Position laserPosition = {4 , 3};
+byte laserDirection = UP;
 
 void setup()
 {
@@ -129,19 +133,8 @@ void setup()
   setupBluetooth();
   
   randomSeed(analogRead(0));
-
-  
-
   horizontalLoop(Wheel(random(255)), YES);
   clearGrid();
-
-//  rainbow(50);
-//  clearGrid();
-//  
-//  delay(2000);
-//  
-//  clearGrid();
-
 }
 
 void loop()
@@ -181,7 +174,7 @@ void loop()
              }
              break;
            default:
-             snake();
+             laser();
              if(byteIndex >= 255) {
                nextMode(0);
              }
@@ -194,9 +187,14 @@ void loop()
     {
         if (ble_available())
         {
-          Serial.println("BLE is Available!");
+          Serial.println("BLE!");
           command = ble_read();
           
+//          if(command != latestCommand)
+//          {
+//            clearGrid();
+//          }    
+//          
           Serial.println(command, HEX);
       
           switch(command)
@@ -218,6 +216,18 @@ void loop()
                Serial.println(red, HEX);
                Serial.println(green, HEX);
                Serial.println(blue, HEX);
+               break;
+             case(LASER):
+               latestCommand = LASER;
+               break;
+             case(COLOR_FADE):
+               latestCommand = COLOR_FADE;
+               break;
+             case(RANDOMNESS):
+               latestCommand = RANDOMNESS;
+               break;
+             case(SHUFFLE):
+               latestCommand = SHUFFLE;
                break;
              case(RAINBOW):
                delayInMillis = ble_read();
@@ -268,22 +278,30 @@ void setupBluetooth()
 
 void doCommand()
 {
-
-   switch(command)
+   switch(latestCommand)
    {
       case(VERTICAL_LOOP):
-         verticalLoop(Color(byteIndex++), YES);
-         verticalLoop(Color(0,0,0), YES);
+         verticalLoop(Wheel(byteIndex++), YES);
+         clearGrid();
 
          //colorWipe(Color(red, green, blue), 0);
          //updateColor(Color(red, green, blue));
          break;
       case(HORIZONTAL_LOOP):
          horizontalLoop(Wheel(byteIndex++), YES);
-         verticalLoop(Color(0,0,0), YES);
+         clearGrid();
 
          //colorWipe(Color(red, green, blue), 0);
          //updateColor(Color(red, green, blue));
+         break;
+      case(LASER):
+         laser();
+         break;
+      case(COLOR_FADE):
+         colorWipe(Wheel(byteIndex++),0);
+         break;
+      case(RANDOMNESS):
+         randomNesss();
          break;
       case(RAINBOW):
          rainbow(delayInMillis);
@@ -291,9 +309,16 @@ void doCommand()
       case(UPDATE_PIXEL):
          updateColor(Color(red, green, blue));
          break;
- 
+      case(SHUFFLE):
+         break;
       default:
          break;   
+   }
+}
+
+void shuffle(byte next) {
+   switch(next) {
+        
    }
 }
 
@@ -327,6 +352,8 @@ void randomNesss() {
     long randomY = random(10);
     long color = Wheel(random(255));
     setPixelColor(randomX, randomY, color, YES);
+    delay(random(100));
+    setPixelColor(randomX, randomY, Color(0,0,0), YES);
 }
 
 void clearGrid() {
@@ -415,53 +442,52 @@ uint32_t Wheel(byte WheelPos)
   }
 }
 
-void snake() {
-  drawSnake();
+void laser() {
+  drawLaser();
   determineNextPosition();
 }
 
 void determineNextPosition() {
   byte finalPos;
-  if(snakeDirection == UP) {
-     finalPos = snakePosition.y + 1;
+  if(laserDirection == UP) {
+     finalPos = laserPosition.y + 1;
   }else{
-     finalPos = snakePosition.y - 1;
+     finalPos = laserPosition.y - 1;
   } 
 
-  Pixel nextPixel = (Pixel)grid[finalPos][snakePosition.x];
+  Pixel nextPixel = (Pixel)grid[finalPos][laserPosition.x];
   if(nextPixel.x == 255) {
-    if(snakeDirection == UP)
+    if(laserDirection == UP)
     {
-      snakeDirection = DOWN;    
+      laserDirection = DOWN;    
     }else{
-      snakeDirection = UP;    
+      laserDirection = UP;    
     }
   }else{
-    if(snakeDirection == UP)
+    if(laserDirection == UP)
     {
-      snakePosition.y += 1;
+      laserPosition.y += 1;
     }else{
-      snakePosition.y -= 1;
+      laserPosition.y -= 1;
     }
   }
 }
 
-void drawSnake() {
-   if(snakeDirection == UP){
-     setPixelColor( snakePosition.y,snakePosition.x, Color(0,255,0), NO);        
-     setPixelColor(snakePosition.y-1,snakePosition.x,  Color(0,255,0), NO);        
-     setPixelColor( snakePosition.y-2,snakePosition.x, Color(0,255,0), NO);        
-     setPixelColor( snakePosition.y-3,snakePosition.x, Color(0,255,0), NO);        
-     setPixelColor(snakePosition.y-4, snakePosition.x, Color(0,0,0), NO); 
-     showStrips();    
+void drawLaser() {
+   if(laserDirection == UP){
+     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y-1,laserPosition.x,  Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y-2,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y-3,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y-4, laserPosition.x, Color(0,0,0), NO); 
    }else{
-     setPixelColor( snakePosition.y,snakePosition.x, Color(0,255,0), NO);        
-     setPixelColor(snakePosition.y+1,snakePosition.x,  Color(0,255,0), NO);        
-     setPixelColor( snakePosition.y+2,snakePosition.x, Color(0,255,0), NO);        
-     setPixelColor( snakePosition.y+3,snakePosition.x, Color(0,255,0), NO);        
-     setPixelColor(snakePosition.y+4, snakePosition.x, Color(0,0,0), NO); 
-     showStrips();      
+     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y+1,laserPosition.x,  Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y+2,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y+3,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y+4, laserPosition.x, Color(0,0,0), NO); 
    }
+   showStrips();      
 }  
   
 

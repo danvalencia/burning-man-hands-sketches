@@ -308,9 +308,9 @@ void doCommand()
          //colorWipe(Color(red, green, blue), 0);
          //updateColor(Color(red, green, blue));
          break;
-//      case(LASER):
-//         laser();
-//         break;
+      case(LASER):
+         laser();
+         break;
       case(COLOR_FADE):
          colorWipe(Wheel(byteIndex),0);
          break;
@@ -508,17 +508,17 @@ void determineNextPosition() {
 
 void drawLaser() {
    if(laserDirection == UP){
-     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor(laserPosition.y-1,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor( laserPosition.y-2,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor( laserPosition.y-3,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor(laserPosition.y-4, laserPosition.x, Color(0,0,0), YES); 
+     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y-1,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y-2,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y-3,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y-4, laserPosition.x, Color(0,0,0), NO); 
    }else{
-     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor(laserPosition.y+1,laserPosition.x,  Color(0,255,0), YES);        
-     setPixelColor( laserPosition.y+2,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor( laserPosition.y+3,laserPosition.x, Color(0,255,0), YES);        
-     setPixelColor(laserPosition.y+4, laserPosition.x, Color(0,0,0), YES); 
+     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y+1,laserPosition.x,  Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y+2,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor( laserPosition.y+3,laserPosition.x, Color(0,255,0), NO);        
+     setPixelColor(laserPosition.y+4, laserPosition.x, Color(0,0,0), NO); 
    }
    
    showStrips();      

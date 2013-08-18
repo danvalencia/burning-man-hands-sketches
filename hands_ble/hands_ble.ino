@@ -6,6 +6,8 @@
 #include <SPI.h>
 #include "Adafruit_WS2801.h"
 #include <ble.h>
+#include <SimpleTimer.h>
+
 
 /* PIN for LED */
 #define PIN    13
@@ -14,14 +16,14 @@
 #define ON     0x01
 #define OFF    0x00
 
-#define VERTICAL_LOOP 0x01
-#define HORIZONTAL_LOOP      0x02
-#define UPDATE_PIXEL 0x03
-#define RAINBOW 0x04
-#define LASER 0x05
-#define COLOR_FADE 0x06
-#define RANDOMNESS 0x07
-#define SHUFFLE 0x08
+#define VERTICAL_LOOP   0x01
+#define HORIZONTAL_LOOP 0x02
+#define UPDATE_PIXEL    0x03
+#define RAINBOW         0x04
+#define LASER           0x05
+#define COLOR_FADE      0x06
+#define RANDOMNESS      0x07
+#define SHUFFLE         0x08
 
 #define NUM_STRIPS 8 
 
@@ -47,10 +49,12 @@ byte blue = 0x00;
 byte xpos = 0x00;
 byte ypos = 0x00;
 
-byte command = 0x00;
+byte command = COLOR_FADE;
 byte delayInMillis = 0x00;
 
 byte byteIndex = 0;
+
+int timerId;
 
 Adafruit_WS2801 strip;
 
@@ -113,6 +117,13 @@ byte turn = 0;
 Position laserPosition = {4 , 3};
 byte laserDirection = UP;
 
+SimpleTimer timer;
+
+boolean firstTime = true;
+byte shuffleInterval;
+
+byte randomDirection = UP;
+
 void setup()
 {
   pinMode(pin, OUTPUT);
@@ -135,10 +146,19 @@ void setup()
   randomSeed(analogRead(0));
   horizontalLoop(Wheel(random(255)), YES);
   clearGrid();
+  
+  timerId = timer.setInterval(60000, nextTurn);
+}
+
+void nextTurn() {
+    turn = turn + 1;
+    Serial.print("Next Turn: "); 
+    Serial.println(turn);
 }
 
 void loop()
-{  
+{
+    timer.run();  
     byteIndex++;
     if(state)
     {
@@ -179,8 +199,6 @@ void loop()
                nextMode(0);
              }
              break;
-//           default:
-//             break;
        }       
     }
     else
@@ -189,12 +207,6 @@ void loop()
         {
           Serial.println("BLE!");
           command = ble_read();
-          
-//          if(command != latestCommand)
-//          {
-//            clearGrid();
-//          }    
-//          
           Serial.println(command, HEX);
       
           switch(command)
@@ -227,7 +239,9 @@ void loop()
                latestCommand = RANDOMNESS;
                break;
              case(SHUFFLE):
-               latestCommand = SHUFFLE;
+               shuffleInterval = ble_read();
+               Serial.print("Interval:");
+               Serial.println(shuffleInterval);
                break;
              case(RAINBOW):
                delayInMillis = ble_read();
@@ -278,27 +292,27 @@ void setupBluetooth()
 
 void doCommand()
 {
-   switch(latestCommand)
+   switch(command)
    {
       case(VERTICAL_LOOP):
-         verticalLoop(Wheel(byteIndex++), YES);
+         verticalLoop(Wheel(byteIndex), YES);
          clearGrid();
 
          //colorWipe(Color(red, green, blue), 0);
          //updateColor(Color(red, green, blue));
          break;
       case(HORIZONTAL_LOOP):
-         horizontalLoop(Wheel(byteIndex++), YES);
+         horizontalLoop(Wheel(byteIndex), YES);
          clearGrid();
 
          //colorWipe(Color(red, green, blue), 0);
          //updateColor(Color(red, green, blue));
          break;
-      case(LASER):
-         laser();
-         break;
+//      case(LASER):
+//         laser();
+//         break;
       case(COLOR_FADE):
-         colorWipe(Wheel(byteIndex++),0);
+         colorWipe(Wheel(byteIndex),0);
          break;
       case(RANDOMNESS):
          randomNesss();
@@ -310,16 +324,36 @@ void doCommand()
          updateColor(Color(red, green, blue));
          break;
       case(SHUFFLE):
+         shuffle();
          break;
       default:
          break;   
    }
 }
 
-void shuffle(byte next) {
-   switch(next) {
-        
+void shuffle() {
+
+   switch(turn) {
+       case 0:
+         colorWipe(Wheel(byteIndex++),0);
+         break;
+       case 1:
+         randomNesss();
+         break;
+       case 2:
+         horizontalLoop(Wheel(random(255)), YES);
+         break;
+       case 3:
+         verticalLoop(Wheel(random(255)), YES);
+         break;
+//       case 4:
+//         //laser();
+//         break;
+       default:
+         turn = 0; //start over
+         break;
    }
+   latestCommand = SHUFFLE;
 }
 
 void updateColor(uint32_t color) {
@@ -353,7 +387,7 @@ void randomNesss() {
     long color = Wheel(random(255));
     setPixelColor(randomX, randomY, color, YES);
     delay(random(100));
-    setPixelColor(randomX, randomY, Color(0,0,0), YES);
+    setPixelColor(randomX, randomY, Color(0,0,0), YES);     
 }
 
 void clearGrid() {
@@ -408,7 +442,6 @@ void verticalLoop(uint32_t color, byte shouldDisplay)
     {
       setPixelColor(i,j,color,shouldDisplay);
     } 
-//    showStrips();
     delay(200);
   }
 }
@@ -475,27 +508,24 @@ void determineNextPosition() {
 
 void drawLaser() {
    if(laserDirection == UP){
-     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), NO);        
-     setPixelColor(laserPosition.y-1,laserPosition.x,  Color(0,255,0), NO);        
-     setPixelColor( laserPosition.y-2,laserPosition.x, Color(0,255,0), NO);        
-     setPixelColor( laserPosition.y-3,laserPosition.x, Color(0,255,0), NO);        
-     setPixelColor(laserPosition.y-4, laserPosition.x, Color(0,0,0), NO); 
+     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor(laserPosition.y-1,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor( laserPosition.y-2,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor( laserPosition.y-3,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor(laserPosition.y-4, laserPosition.x, Color(0,0,0), YES); 
    }else{
-     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), NO);        
-     setPixelColor(laserPosition.y+1,laserPosition.x,  Color(0,255,0), NO);        
-     setPixelColor( laserPosition.y+2,laserPosition.x, Color(0,255,0), NO);        
-     setPixelColor( laserPosition.y+3,laserPosition.x, Color(0,255,0), NO);        
-     setPixelColor(laserPosition.y+4, laserPosition.x, Color(0,0,0), NO); 
+     setPixelColor( laserPosition.y,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor(laserPosition.y+1,laserPosition.x,  Color(0,255,0), YES);        
+     setPixelColor( laserPosition.y+2,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor( laserPosition.y+3,laserPosition.x, Color(0,255,0), YES);        
+     setPixelColor(laserPosition.y+4, laserPosition.x, Color(0,0,0), YES); 
    }
+   
    showStrips();      
 }  
-  
-
 
 void showStrips() {
    for(byte i = 0; i < NUM_STRIPS; i++) {
        strip_array[i].show();
    }  
 }
-
-
